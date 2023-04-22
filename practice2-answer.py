@@ -1,6 +1,7 @@
 # 【内容】
 # 下記サイトにて公開している「フィア問実践編」の２問目を作った時の
 # 個人的な回答です。さらなる高速化の余地は多大にあると思います。
+# https://bokeshi.simdif.com/problems.html
 
 import time
 
