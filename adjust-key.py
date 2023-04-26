@@ -30,7 +30,7 @@ def name(inst, p):
 
 print("【結果】")
 tones = {int(s) for s in score.split()}
-i = -1; res = []
+i = -1-min(tones); res = []
 while max(tones)+i < 36:
 	i += 1
 	if min(tones)+i < 0: continue
@@ -43,7 +43,7 @@ while max(tones)+i < 36:
 	for inst, flg in okFlg.items():
 		if flg:
 			res.append((inst, i))
-			print("%2d: %s %s-%s (+%i)" % (
+			print("%2d: %s %s-%s (%+i)" % (
 					len(res),
 					inst,
 					name(inst, min(tones)+i),
