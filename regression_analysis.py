@@ -19,7 +19,7 @@ pe  = n-2
 VR  = SR/pR
 Ve  = Se/pe
 F0  = VR/Ve
-ST  = SR+Se
+ST  = Syy
 R2  = SR/ST
 
 '''
