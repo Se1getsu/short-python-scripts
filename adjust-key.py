@@ -20,8 +20,13 @@ note_name = """
 
 
 score = """\
-15 10 15 8 13 17 25 20 22
-17 18 20 18 20 13 17 18 20 17 18
+4 4 2
+0 0 -2
+
+2 0 2 9 2 0 2 4 4 2 0 -3
+2 0 2 9 2 0 2 5 5
+2 0 2 9 2 0 2 4 4 2 0 -3
+2 0 2 9 2 0 12 14 9 7 9 7 5
 """
 
 
@@ -55,7 +60,16 @@ print()
 for num, (inst, i) in enumerate(res):
 	print("【No.%s】" % (num+1))
 	s = score
+	
+	posi, nega = [], []
 	for j in range(21)[::-1]:
 		p = register[inst][j]
+		if p-i >= 0: posi.append(p)
+		else:        nega.append(p)
+	posi.sort(reverse=True)
+	nega.sort()
+ 
+	for p in nega + posi:
 		s = s.replace(str(p-i), name(inst, p))
+  
 	print(s)
