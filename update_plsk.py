@@ -117,4 +117,4 @@ for id in IDLIST:
 	if OP.v[2]: path = dir+id; os.mkdir(path)
 	Update_plsk(id)
 
-print("Conpleted.")
+print("Completed.")
