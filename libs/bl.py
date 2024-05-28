@@ -100,36 +100,3 @@ def put_rect(input_rects, roomsORIG=[Rect(0, 0, 1024, 10000)]):
     uniq_rooms = sorted(new_rooms, key=lambda a:a.y1)
 
   return (rects, uniq_rooms)
-
-
-def calc(paper_x, paper_y, w, h):
-  n = 0
-  while (n := n + 1):
-    print(f"--- [n = {n}] ---")
-    retflg = True
-    for i in range(n+1):
-      img_list = [(w, h)] * i + [(h, w)] * (n-i)
-      rects, rooms = put_rect(img_list, roomsORIG=[Rect(0,0,paper_x,paper_y)])
-      if len(rects) == n:
-        retflg = False
-        for rect in rects: print(rect)
-        print()
-    if retflg:
-      print("No result\n")
-      return n - 1
-
-w = 87.5
-h = 54
-
-if 0:
-  name = "A4"
-  px, py = 210, 297
-else:
-  name = "B5"
-  px, py = 182, 257
-
-n = calc(px, py, w, h)
-rate = 100 * w * h * n / (px * py)
-print(f"size: {name}")
-print(f"n: {n}")
-print(f"Fill rate: {rate:02f}")
