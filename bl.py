@@ -26,7 +26,6 @@ def calc(paper_x, paper_y, w, h):
 
 
 def show_result_image(paper_x, paper_y, result):
-    # 色のリスト
     colors = [
         "red", "green", "blue", "yellow", "purple",
         "orange", "cyan", "magenta", "brown", "pink", "lime", "navy"
@@ -41,10 +40,7 @@ def show_result_image(paper_x, paper_y, result):
         x, y, width, height = rect.x1, rect.y1, rect.w, rect.h
         draw.rectangle([x, y, x + width, y + height], fill=colors[i % len(colors)])
 
-    # 画像を保存
     image.save("bl_output.png")
-
-    # 画像を表示
     image.show()
 
 
