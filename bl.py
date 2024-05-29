@@ -10,11 +10,9 @@ import sys
 # input
 _印刷物の横幅 = 87.5
 _印刷物の縦幅 = 54
-_紙のサイズ名 = "C"
+_紙のサイズ名 = "A4"
 
 # カスタムサイズ - サイズ名を"C"にして使用
-# _紙の横幅 = 220
-# _紙の縦幅 = 340
 _紙の横幅 = 280
 _紙の縦幅 = 510
 
@@ -39,7 +37,9 @@ def calc(paper_x, paper_y, w, h):
                 for rect in rects: print(rect)
                 print()
                 save_result_image(paper_x, paper_y, last_discovered_result, f"{n}-{count}")
-        if not count:
+        if count:
+            remove_result_images(f"{n-1}-*")
+        else:
             print("No result\n")
             return n - 1, last_discovered_result
     else:
@@ -68,27 +68,35 @@ def save_result_image(paper_x, paper_y, result, suffix=""):
     image.save(f"out/bl_result{suffix}.png")
 
 
-def clean_output_files():
-    _ = subprocess.run("rm out/bl_result*.png", shell=True)
+def remove_result_images(suffix=None):
+    if suffix: suffix = "_" + suffix
+    else: suffix = "*"
+    _ = subprocess.run(f"rm out/bl_result{suffix}.png", shell=True)
 
 
 if __name__ == "__main__":
+    # 印刷物のサイズ
     w = _印刷物の横幅
     h = _印刷物の縦幅
 
-    # ↓ここでA4/B4を切り替える
+    # 紙のサイズ
     size_name = _紙のサイズ名.upper()
     match size_name:
         case "A4":  px, py = 210, 297
         case "B5":  px, py = 182, 257
         case "C":   px, py = _紙の横幅, _紙の縦幅
         case _:     print("Invalid paper size"); sys.exit()
-    if size_name == "C": size_name = f"CUSTOM {px} x {py}"
+    if size_name == "C":
+        size_name = f"CUSTOM {px} x {py}"
 
-    clean_output_files()
+    # クリーン
+    remove_result_images()
+
+    # 計算実行
     n, result = calc(px, py, w, h)
     rate = 100 * w * h * n / (px * py)
 
+    # 出力
     print("--- RESULT --- ")
     print(f"size: {size_name}")
     print(f"n: {n}")
