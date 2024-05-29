@@ -2,9 +2,22 @@
 # 部員の名札の印刷の際に、紙をできるだけ無駄にしない印刷方法を
 # 長方形詰め込み問題として解くプログラム。
 
-import subprocess
 from libs.bl import Rect, put_rect
 from PIL import Image, ImageDraw
+import subprocess
+import sys
+
+# input
+_印刷物の横幅 = 87.5
+_印刷物の縦幅 = 54
+_紙のサイズ名 = "C"
+
+# カスタムサイズ - サイズ名を"C"にして使用
+# _紙の横幅 = 220
+# _紙の縦幅 = 340
+_紙の横幅 = 280
+_紙の縦幅 = 510
+
 
 def calc(paper_x, paper_y, w, h):
     min_n = max(
@@ -30,7 +43,8 @@ def calc(paper_x, paper_y, w, h):
             print("No result\n")
             return n - 1, last_discovered_result
     else:
-        print("fill rate > 100%")
+        print(f"--- [n = {n}] ---")
+        print("fill rate > 100%\n")
         return n - 1, last_discovered_result
 
 
@@ -59,24 +73,24 @@ def clean_output_files():
 
 
 if __name__ == "__main__":
-    # 詰め込む印刷物のサイズ
-    w = 87.5
-    h = 54
+    w = _印刷物の横幅
+    h = _印刷物の縦幅
 
     # ↓ここでA4/B4を切り替える
-    if 1:
-        name = "A4"
-        px, py = 210, 297
-    else:
-        name = "B5"
-        px, py = 182, 257
+    size_name = _紙のサイズ名.upper()
+    match size_name:
+        case "A4":  px, py = 210, 297
+        case "B5":  px, py = 182, 257
+        case "C":   px, py = _紙の横幅, _紙の縦幅
+        case _:     print("Invalid paper size"); sys.exit()
+    if size_name == "C": size_name = f"CUSTOM {px} x {py}"
 
     clean_output_files()
     n, result = calc(px, py, w, h)
     rate = 100 * w * h * n / (px * py)
 
     print("--- RESULT --- ")
-    print(f"size: {name}")
+    print(f"size: {size_name}")
     print(f"n: {n}")
     print(f"fill rate: {rate:.3f}%")
     print("Saved result images in output/ directory\n")
