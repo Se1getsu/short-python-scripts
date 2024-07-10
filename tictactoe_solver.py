@@ -12,10 +12,12 @@
 #  7 | 8 | 9
 # bで一手前の状態に戻ります。
 # qで終了します。
+# eで評価値の表示/非表示を切り替えます。
 
 from itertools import permutations
 
 探索ログ表示 = False
+評価値を表示 = True
 
 WIN = set()
 for t in [
@@ -97,23 +99,23 @@ def search():
     return result
 
 # 探索結果と棋譜を元に、盤面と評価値を表示する。
-def print_board(result, moves):
+def print_board(result, moves, show_ev):
     s = tuple(moves[-6:])
     p = result[s]
     end = p in (+17, -17)
     oup = f"棋譜: {''.join(map(str, moves[6:]))}\n" if moves[6:] else ""
     if end:
         oup += f"終局です。\n"
-    elif p == 0:
+    elif p == 0 and show_ev:
         oup += "お互いが最善の手を打ち続けると勝負がつきません。\n"
-    else:
+    elif show_ev:
         will_win = ["後手(O)", "先手(X)"][((p > 0) - len(moves)) % 2]
         oup += f"あと{16-abs(p)+1}手で{will_win}が勝ちます。\n"
 
     for a in range(1, 10):
         if a in s:
             oup += [" O ", " X "][(len(moves) - moves[::-1].index(a)) % 2]
-        elif (next_s := s[1:] + (a,)) in result:
+        elif (next_s := s[1:] + (a,)) in result and show_ev:
             oup += "%+3d" % -result[next_s]
         else:
             oup += "   "
@@ -129,17 +131,20 @@ if __name__ == "__main__":
     result = search()
     if 探索ログ表示: print("=" * 16 + "\n")
 
+    show_ev = 評価値を表示
     moves = [0, 0, 0, 0, 0, 0]
-    print_board(result, moves)
+    print_board(result, moves, show_ev)
 
     while 1:
         turn = "XO"[len(moves) % 2]
-        hand = input(f"{turn}(1-9|b|q)> ")
+        hand = input(f"{turn}(1-9|b|q|e)> ")
         if hand == "b": # 一手戻る
             if len(moves) == 6: continue
             moves = moves[:-1]
         elif hand == "q":
             break
+        elif hand == "e":
+            show_ev = not show_ev
         elif hand.isdecimal() and 1 <= int(hand) <= 9:
             hand = int(hand)
             if hand in moves[-6:]: continue
@@ -148,4 +153,4 @@ if __name__ == "__main__":
             continue
 
         print()
-        print_board(result, moves)
+        print_board(result, moves, show_ev)
