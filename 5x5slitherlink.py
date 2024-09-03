@@ -52,5 +52,4 @@ def solve(problem):
     return [a for a in anss if len(a) == minl]
 
 if __name__ == "__main__":
-    print(*solve(problem) or ["解なし"], sep="\n")
-
+    [*map(print,solve(problem)or["解なし"])]
