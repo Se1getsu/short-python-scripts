@@ -16,7 +16,7 @@
 # 20-21-22-23-24
 
 problem = [None if c == '_' else int(c) for c in """
-_121
+_12_
 0__2
 _222
 _2_1
@@ -28,20 +28,20 @@ def decr(problem, row, column):
     if problem[i := 4*row+column] != None: problem[i] -= 1
 
 def judge(problem, answer):
-    if not(pb := problem[:]) or answer[0] != answer[-1]: return False
+    if not(pb := problem[:]) or answer[0]-answer[-1]: return False
     for r,c,v in [(p//5, p%5, q-p) for p,q in zip(answer, answer[1:])]:
-        if r and c and v<0: decr(pb, r-1, c-1)
-        if r and c-4 and v in {-5,1}: decr(pb, r-1, c)
-        if r-4 and c and v in {-1,5}: decr(pb, r, c-1)
-        if r-4 and c-4 and v>0: decr(pb, r, c)
-    return not [v for v in pb if v]
+        if r*c*v<0: decr(pb, r-1, c-1)
+        if r*(c-4): v in{-1,5} or decr(pb, r-1, c)
+        if c*(r-4): v in{-5,1} or decr(pb, r, c-1)
+        if (r-4)*(c-4)*v>0: decr(pb, r, c)
+    return not[v for v in pb if v]
 
 def _solve(problem, retanss, answer):
     if (h := answer[:-1]) and answer[-1] in h:
         if answer[-1] == answer[0] and judge(problem, answer): retanss.append(answer)
     elif answer:
-        s,p = answer[0], answer[-1]
-        for v,c in (-5, p>4 and s<=p-5),(-1, p%5 and s<=p-1),(1, p%5-4),(5, p<20):
+        s,*_,p = answer*2
+        for v,c in (-5, p>4 and p-s>4),(-1, p%5 and p>s),(1, p%5-4),(5, p<20):
             if c: _solve(problem, retanss, answer+[p+v])
     else:
         for p in range(25): _solve(problem, retanss, [p])
