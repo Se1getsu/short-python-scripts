@@ -167,7 +167,7 @@ def expected_value_if_double(my_hand: HandState, dealer_card: str) -> Fraction:
         new_hand.current_sum += card_value(drawn_card)
         new_hand.nace += int(drawn_card == 'A')
         if new_hand.current_sum > 21:
-            ev += LOSE_MULTIPLIER * Fraction(4 if drawn_card == '10' else 1, len(RANKS))
+            ev += LOSE_MULTIPLIER * 2 * Fraction(4 if drawn_card == '10' else 1, len(RANKS))
         else:
             es, a = expected_value(new_hand, dealer_card, doubled=True)
             ev += es[a] * Fraction(4 if drawn_card == '10' else 1, len(RANKS))
