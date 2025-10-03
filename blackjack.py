@@ -11,8 +11,10 @@
 - SURRENDER: allowed any time, even after HIT/DOUBLE in this world; returns half the bet.
 """
 
+from argparse import ArgumentParser
 from dataclasses import dataclass
 from fractions import Fraction
+import sys
 from typing import List, Tuple, Dict
 
 # MARK: - Constants
@@ -222,23 +224,56 @@ def overall_expected_value() -> Fraction:
 # MARK: - メイン処理
 
 def main():
-    # print("    " + " ".join(f"{i:8d}" for i in range(10, 22)) + f" {'BUST':>8s}")
-    # for rank in RANKS:
-    #     p = dealer_probabilities(rank)
-    #     out = f"{rank:>2s}: "
-    #     for v in p.values():
-    #         out += f"{float(v*100):7.3f}% "
-    #     print(out)
-    # print("=" * 48)
+    def parse_card_input(card_char: str) -> str:
+        assert len(card_char) == 1
+        if card_char == '0':
+            return '10'
+        elif card_char in RANKS:
+            return card_char
+        else:
+            raise ValueError(f"未定義のカード: {card_char}")
 
-    # es, a = expected_value(HandState.from_cards(['7', '7']), '4')
-    # for action, ev in es.items():
-    #     out = "* " if action == a else "  "
-    #     out += f"{action:9s}: {float(ev):6.3f}x"
-    #     print(out)
+    print("入力例: 30aq (ディーラーの見えているカードが Q、手札が 3, 10, A の場合)")
+    inp = input("状況: ").upper().strip()
+    *my_hand, dealer_card = [parse_card_input(c) for c in inp]
 
-    ev = overall_expected_value()
-    print(f"{ev} = {float(ev):.4f}x")
+    while len(my_hand) < 5:
+        print()
+        es, a = expected_value(HandState.from_cards(my_hand), dealer_card)
+        for action, ev in es.items():
+            out = "* " if action == a else "  "
+            out += f"{action:9s}: {float(ev):6.3f}x"
+            print(out)
+        print()
+
+        if len(my_hand) >= 4: break
+        inp = input("次のカード(終了する場合は Enter): ").upper().strip()
+        if not inp:
+            break
+        if len(inp) == 1:
+            my_hand.append(parse_card_input(inp))
+        else:
+            *my_hand, dealer_card = [parse_card_input(c) for c in inp]
 
 if __name__ == "__main__":
+    parser = ArgumentParser(description="ブラックジャックの確率・期待値計算ツール")
+    parser.add_argument("-d", "--dealer-prob", action="store_true", help="ディーラーの確率分布を表示する")
+    parser.add_argument("-e", "--entire", action="store_true", help="ゲーム全体の期待値を計算する")
+    args = parser.parse_args()
+
+    if args.dealer_prob:
+        print("    " + " ".join(f"{i:8d}" for i in range(10, 22)) + f" {'BUST':>8s}")
+        for rank in RANKS:
+            p = dealer_probabilities(rank)
+            out = f"{rank:>2s}: "
+            for v in p.values():
+                out += f"{float(v*100):7.3f}% "
+            print(out)
+        sys.exit(0)
+
+    if args.entire:
+        ev = overall_expected_value()
+        print(f"{ev} = {float(ev):.4f}x")
+        sys.exit(0)
+
     main()
