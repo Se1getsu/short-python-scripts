@@ -198,6 +198,27 @@ def expected_value(
     best_action = max(actions, key=actions.get)
     return actions, best_action
 
+# MARK: - ゲーム全体の期待値の計算
+
+def overall_expected_value() -> Fraction:
+    """
+    全ての初期手札とディーラーの見えているカードの組み合わせに対する、
+    プレイヤーが最適な行動を取った場合の、賭け金の倍率の期待値を計算する
+    """
+    ev = Fraction(0)
+    total_combinations = Fraction(len(RANKS) ** 3)
+
+    for my_card1 in RANKS:
+        for my_card2 in RANKS:
+            if is_blackjack(HandState.from_cards([my_card1, my_card2])):
+                ev += BLACKJACK_MULTIPLIER * Fraction(len(RANKS), total_combinations)
+                continue
+            for dealer_card in RANKS:
+                my_hand = HandState.from_cards([my_card1, my_card2])
+                es, a = expected_value(my_hand, dealer_card)
+                ev += es[a] * Fraction(1, total_combinations)
+    return ev
+
 # MARK: - メイン処理
 
 def main():
@@ -210,11 +231,14 @@ def main():
     #     print(out)
     # print("=" * 48)
 
-    es, a = expected_value(HandState.from_cards(['7', '7']), '4')
-    for action, ev in es.items():
-        out = "* " if action == a else "  "
-        out += f"{action:9s}: {float(ev):6.3f}x"
-        print(out)
+    # es, a = expected_value(HandState.from_cards(['7', '7']), '4')
+    # for action, ev in es.items():
+    #     out = "* " if action == a else "  "
+    #     out += f"{action:9s}: {float(ev):6.3f}x"
+    #     print(out)
+
+    ev = overall_expected_value()
+    print(f"{ev} = {float(ev):.4f}x")
 
 if __name__ == "__main__":
     main()
