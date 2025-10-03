@@ -21,11 +21,11 @@ RANKS = list('A23456789') + ['10'] + list('JQK')
 MAX_CARDS = 5  # 手札の最大枚数
 BUST = 999     # >21 を表す値
 
-LOSE_MULTIPLIER = Fraction(0)           # 敗北の配当倍率
-SURRENDER_MULTIPLIER = Fraction(1, 2)   # サレンダーの配当倍率
-DRAW_MULTIPLIER = Fraction(1)           # 引き分けの配当倍率
-WIN_MULTIPLIER = Fraction(2)            # 通常勝利の配当倍率
-BLACKJACK_MULTIPLIER = Fraction(3)      # ブラックジャックの配当倍率
+LOSE_MULTIPLIER = Fraction(-1)          # 敗北の配当倍率
+SURRENDER_MULTIPLIER = Fraction(-1, 2)  # サレンダーの配当倍率
+DRAW_MULTIPLIER = Fraction(0)           # 引き分けの配当倍率
+WIN_MULTIPLIER = Fraction(1)            # 通常勝利の配当倍率
+BLACKJACK_MULTIPLIER = Fraction(2)      # ブラックジャックの配当倍率
 
 # MARK: - Structures
 
@@ -99,9 +99,8 @@ def _dealer_probabilities(
         new_dealer.ncard += 1
         new_dealer.current_sum += card_value(drawn_card)
         new_dealer.nace += int(drawn_card == 'A')
-        mult = 4 if drawn_card == '10' else 1
         for k, v in _dealer_probabilities(new_dealer).items():
-            outcomes[k] += v / len(RANKS) * mult
+            outcomes[k] += v * Fraction(4 if drawn_card == '10' else 1, len(RANKS))
     return outcomes
 
 dealer_probabilities_cache: Dict[str, Dict[int, Fraction]] = {}
@@ -126,35 +125,95 @@ def expected_value_if_hit(my_hand: HandState, dealer_card: str) -> Fraction:
     """
     プレイヤーがヒットした場合の、賭け金の倍率の期待値を計算する
     """
-    pass
+    ev = Fraction(0)
+    for drawn_card in RANKS[:-3]:  # 10, J, Q, K は同じ扱い
+        new_hand = my_hand.copy()
+        new_hand.ncard += 1
+        new_hand.current_sum += card_value(drawn_card)
+        new_hand.nace += int(drawn_card == 'A')
+        if new_hand.current_sum > 21:
+            ev += LOSE_MULTIPLIER * Fraction(4 if drawn_card == '10' else 1, len(RANKS))
+        else:
+            es, a = expected_value(new_hand, dealer_card)
+            ev += es[a] * Fraction(4 if drawn_card == '10' else 1, len(RANKS))
+    return ev
 
 def expected_value_if_stand(my_hand: HandState, dealer_card: str) -> Fraction:
     """
     プレイヤーがスタンドした場合の、賭け金の倍率の期待値を計算する
     """
-    pass
+    ev = Fraction(0)
+    ps = dealer_probabilities(dealer_card)
+    my_value = hand_value(my_hand)
+    for dealer_value, p in ps.items():
+        if dealer_value == BUST or my_value > dealer_value:
+            ev += WIN_MULTIPLIER * p
+        elif my_value == dealer_value:
+            ev += DRAW_MULTIPLIER * p
+        else:
+            ev += LOSE_MULTIPLIER * p
+    return ev
 
 def expected_value_if_double(my_hand: HandState, dealer_card: str) -> Fraction:
     """
     プレイヤーがダブルした場合の、賭け金の倍率の期待値を計算する
     """
-    pass
+    ev = Fraction(0)
+    for drawn_card in RANKS[:-3]:  # 10, J, Q, K は同じ扱い
+        new_hand = my_hand.copy()
+        new_hand.ncard += 1
+        new_hand.current_sum += card_value(drawn_card)
+        new_hand.nace += int(drawn_card == 'A')
+        if new_hand.current_sum > 21:
+            ev += LOSE_MULTIPLIER * Fraction(4 if drawn_card == '10' else 1, len(RANKS))
+        else:
+            es, a = expected_value(new_hand, dealer_card, doubled=True)
+            ev += es[a] * Fraction(4 if drawn_card == '10' else 1, len(RANKS))
+    return ev
 
-def expected_value_if_surrender(my_hand: HandState) -> Fraction:
+def expected_value(
+    my_hand: HandState,
+    dealer_card: str,
+    doubled: bool = False,
+) -> Tuple[Dict[str, Fraction], str]:
     """
-    プレイヤーがサレンダーした場合の、賭け金の倍率の期待値を計算する
+    プレイヤーが最適な行動を取った場合の、賭け金の倍率の期待値を計算する
     """
-    return SURRENDER_MULTIPLIER
+    actions = {}
+    if doubled:
+        actions['STAND'] = expected_value_if_stand(my_hand, dealer_card) * 2
+        actions['SURRENDER'] = SURRENDER_MULTIPLIER * 2
+    elif my_hand.ncard == 2:
+        actions['HIT'] = expected_value_if_hit(my_hand, dealer_card)
+        actions['STAND'] = expected_value_if_stand(my_hand, dealer_card)
+        actions['DOUBLE'] = expected_value_if_double(my_hand, dealer_card)
+        actions['SURRENDER'] = SURRENDER_MULTIPLIER
+    elif my_hand.ncard < MAX_CARDS:
+        actions['HIT'] = expected_value_if_hit(my_hand, dealer_card)
+        actions['STAND'] = expected_value_if_stand(my_hand, dealer_card)
+        actions['SURRENDER'] = SURRENDER_MULTIPLIER
+    else:
+        actions['STAND'] = expected_value_if_stand(my_hand, dealer_card)
+
+    best_action = max(actions, key=actions.get)
+    return actions, best_action
 
 # MARK: - メイン処理
 
 def main():
-    print("    " + " ".join(f"{i:8d}" for i in range(10, 22)) + f" {'BUST':>8s}")
-    for rank in RANKS:
-        p = dealer_probabilities(rank)
-        out = f"{rank:>2s}: "
-        for v in p.values():
-            out += f"{float(v*100):7.3f}% "
+    # print("    " + " ".join(f"{i:8d}" for i in range(10, 22)) + f" {'BUST':>8s}")
+    # for rank in RANKS:
+    #     p = dealer_probabilities(rank)
+    #     out = f"{rank:>2s}: "
+    #     for v in p.values():
+    #         out += f"{float(v*100):7.3f}% "
+    #     print(out)
+    # print("=" * 48)
+
+    es, a = expected_value(HandState.from_cards(['7', '7']), '4')
+    for action, ev in es.items():
+        out = "* " if action == a else "  "
+        out += f"{action:9s}: {float(ev):6.3f}x"
         print(out)
 
 if __name__ == "__main__":
